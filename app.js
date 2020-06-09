@@ -9,7 +9,7 @@ const morgan = require('morgan');
 const { sequelize } = require('./models');
 
 // routes
-const userRoutes = require('./routes/user');
+// const userRoutes = require('./routes/user');
 const courseRoutes = require('./routes/course');
 
 // variable to enable global error logging
@@ -25,7 +25,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 // routes
-app.use('/api', userRoutes);
+// app.use('/api', userRoutes);
 app.use('/api', courseRoutes);
 
 // TODO setup your api routes here
@@ -37,18 +37,18 @@ app.use('/api', courseRoutes);
 //   storage: 'fsjstd-restapi.db',
 // });
 
-(async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('Connection to the database successful!');
-  } catch (error) {
-    console.error('Error connecting to the database: ', error);
-  }
-})();
+// (async () => {
+//   try {
+//     await sequelize.authenticate();
+//     console.log('Connection to the database successful!');
+//   } catch (error) {
+//     console.error('Error connecting to the database: ', error);
+//   }
+// })();
 
-sequelize.sync().then(() => {
-  console.log('All Models were synced');
-});
+// sequelize.sync().then(() => {
+//   console.log('All Models were synced');
+// });
 
 // setup a friendly greeting for the root route
 app.get('/', (req, res) => {
