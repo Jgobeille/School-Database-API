@@ -1,7 +1,7 @@
 // JavaScript exports
 
-const auth = require('basic-auth');
-const bcryptjs = require('bcryptjs');
+const auth = require('../node_modules/basic-auth');
+const bcryptjs = require('../node_modules/bcryptjs');
 
 const { User } = require('../models');
 

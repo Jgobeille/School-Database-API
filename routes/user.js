@@ -3,18 +3,18 @@ const express = require('express');
 
 // imports
 
-const auth = require('basic-auth');
 const bcryptjs = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
 
-// user model
+// file imports
 const { User } = require('../models');
+const funcs = require('../js/functions.js');
 
 // router server
 const router = express.Router();
 
 // validations for user
-const Validators = [
+const validators = [
   check('firstName')
     .exists({
       checkNull: true,
@@ -27,11 +27,28 @@ const Validators = [
       checkFalsy: true,
     })
     .withMessage('Please provide a value for "last name"'),
-  check('email')
+  check('emailAddress')
     .exists({ checkNull: true, checkFalsy: true })
     .withMessage('Please provide a value for "Email"')
     .isEmail()
-    .withMessage('Please provide a valid email address for "Email"'),
+    .withMessage('Please provide a valid email address for "Email"')
+    .custom(async (value) => {
+      // Get all users
+      const users = await User.findAll();
+
+      // Check if entered email matches other emails in db
+      const sameEmail = await users.find((user) => user.emailAddress === value);
+
+      // if match, throw error
+      if (sameEmail) {
+        throw new Error(
+          'The email you entered is already in use. Please use a different email',
+        );
+      }
+
+      // Indicates the success of this synchronous custom validator
+      return true;
+    }),
   check('password')
     .exists({ checkNull: true, checkFalsy: true })
     .withMessage('Please provide a value for "Password"')
@@ -39,67 +56,19 @@ const Validators = [
     .withMessage('Please provide password with 8 to 20 characters'),
 ];
 
-const authenticateUser = async (req, res, next) => {
-  let message = null;
-  // Parse the user's credentials from the Authorization header.
-  const credentials = auth(req);
-
-  if (credentials) {
-    const users = await User.findAll();
-
-    const user = users.find((u) => u.emailAddress === credentials.emailAddress);
-
-    // If a user was successfully retrieved from the data store...
-
-    if (user) {
-      // Use the bcryptjs npm package to compare the user's password
-      // (from the Authorization header) to the user's password
-      // that was retrieved from the data store.
-
-      const authenticated = bcryptjs.compareSync(
-        credentials.pass,
-        user.password,
-      );
-
-      // If the passwords match...
-      if (authenticated) {
-        req.currentUser = user;
-      } else {
-        message = `Authentication failure for username: ${user.firstName}`;
-      }
-    } else {
-      message = `User not found for username: ${credentials.firstName}`;
-    }
-  } else {
-    message = 'Auth header not found';
-  }
-
-  // If user authentication failed...
-  if (message) {
-    console.warn(message);
-    // Return a response with a 401 Unauthorized HTTP status code.
-    res.status(401).json({
-      message: 'Access Denied',
-    });
-  } else {
-    // Or if user authentication succeeded...
-    // Call the next() method.
-    next();
-  }
-};
-
 // Send GET request to /users to return currently authenticatedUser
-router.get('/users', authenticateUser, (req, res) => {
+router.get('/users', funcs.authenticateUser, (req, res) => {
   const user = req.currentUser;
 
   res.json({
     firstName: user.firstName,
     lastName: user.lastName,
+    emailAddress: user.emailAddress,
   });
 });
 
 // Send POST request to /users to create a new user
-router.post('/users', Validators, (req, res) => {
+router.post('/users', validators, (req, res) => {
   // Attempt to get the validation result from the Request object.
   const errors = validationResult(req);
 
@@ -127,4 +96,3 @@ router.post('/users', Validators, (req, res) => {
 });
 
 module.exports = router;
-module.exports = authenticateUser;
