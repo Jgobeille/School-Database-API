@@ -4,7 +4,7 @@ const auth = require('basic-auth');
 const bcryptjs = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
 
-const { Course } = require('../models');
+const { Course, User } = require('../models');
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ function asyncHandler(cb) {
 }
 
 // validations for user
-const Validators = [
+const validators = [
   check('firstName')
     .exists({
       checkNull: true,
@@ -32,11 +32,28 @@ const Validators = [
       checkFalsy: true,
     })
     .withMessage('Please provide a value for "last name"'),
-  check('email')
+  check('emailAddress')
     .exists({ checkNull: true, checkFalsy: true })
     .withMessage('Please provide a value for "Email"')
     .isEmail()
-    .withMessage('Please provide a valid email address for "Email"'),
+    .withMessage('Please provide a valid email address for "Email"')
+    .custom(async (value) => {
+      // Get all users
+      const users = await User.findAll();
+
+      // Check if entered email matches other emails in db
+      const sameEmail = await users.find((user) => user.emailAddress === value);
+
+      // if match, throw error
+      if (sameEmail) {
+        throw new Error(
+          'The email you entered is already in use. Please use a different email',
+        );
+      }
+
+      // Indicates the success of this synchronous custom validator
+      return true;
+    }),
   check('password')
     .exists({ checkNull: true, checkFalsy: true })
     .withMessage('Please provide a value for "Password"')
@@ -47,12 +64,13 @@ const Validators = [
 const authenticateUser = async (req, res, next) => {
   let message = null;
   // Parse the user's credentials from the Authorization header.
+
   const credentials = auth(req);
 
   if (credentials) {
     const users = await User.findAll();
 
-    const user = users.find((u) => u.emailAddress === credentials.emailAddress);
+    const user = users.find((u) => u.emailAddress === credentials.name);
 
     // If a user was successfully retrieved from the data store...
 
@@ -104,7 +122,7 @@ router.get('/users', authenticateUser, (req, res) => {
 });
 
 // Send POST request to /users to create a new user
-router.post('/users', Validators, (req, res) => {
+router.post('/users', validators, (req, res) => {
   // Attempt to get the validation result from the Request object.
   const errors = validationResult(req);
 
@@ -138,7 +156,7 @@ router.post('/users', Validators, (req, res) => {
 // Send a GET request to /courses to READ a list of courses
 router.get(
   '/courses',
-  asyncHandler(async (req, res, _next) => {
+  asyncHandler(async (req, res) => {
     const courses = await Course.findAll();
 
     res.json(courses);
@@ -164,7 +182,7 @@ router.get(
   }),
 );
 
-// Send a POST request to /quotes to CREATE a new quote
+// Send a POST request to /quotes to CREATE a new course
 router.post(
   '/courses',
   authenticateUser,
@@ -173,6 +191,7 @@ router.post(
       const course = await Course.create({
         title: req.body.title,
         description: req.body.description,
+        userId: req.body.userId,
       });
       res.status(201).json(course);
     } else {
@@ -189,17 +208,30 @@ router.put(
   authenticateUser,
   asyncHandler(async (req, res, next) => {
     const { id } = req.params;
+
+    console.log(req.currentUser.id);
+
     // get course
     const course = await Course.findByPk(id);
-    if (course) {
-      // reassign author and quote to new data user input
-      course.title = req.body.title;
-      course.description = req.body.description;
 
-      await Course.update(course);
-      // everything A O.K. status
-      // end method tells express server that route is completed
-      res.status(204).end();
+    console.log(course.userId);
+
+    if (course) {
+      const currentUser = req.currentUser.id;
+      if (course.userId === currentUser) {
+        // reassign author and quote to new data user input
+        course.title = req.body.title;
+        course.description = req.body.description;
+
+        await course.update(req.body);
+        // everything A O.K. status
+        // end method tells express server that route is completed
+        res.status(204).end();
+      } else {
+        res
+          .status(403)
+          .json({ message: 'This user is not authorized to edit this course' });
+      }
     } else {
       res.status(404).json({ message: 'Course Not Found' });
       next();
@@ -219,7 +251,7 @@ router.delete(
       await course.destroy();
       res.status(204).end();
     } else {
-      res.status(404).json({ message: 'Quote Not Found' });
+      res.status(404).json({ message: 'Course Not Found' });
       next();
     }
   }),

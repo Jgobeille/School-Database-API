@@ -52,11 +52,11 @@ module.exports = (sequelize) => {
       },
       estimatedTime: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       materialsNeeded: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
     },
     // arg2: model options
