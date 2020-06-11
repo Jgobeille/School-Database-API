@@ -1,12 +1,12 @@
 // Dependency imports
-const { check } = require('express-validator');
+const { check, validationResult } = require('express-validator');
 
 // file imports
 const { User } = require('../models');
 
 // validations for user
 module.exports = {
-  validation: [
+  userValidation: [
     check('firstName')
       .exists({
         checkNull: true,
@@ -49,4 +49,34 @@ module.exports = {
       .isLength({ min: 8, max: 20 })
       .withMessage('Please provide password with 8 to 20 characters'),
   ],
+  courseValidation: [
+    check('title')
+      .exists({
+        checkNull: true,
+        checkFalsy: true,
+      })
+      .withMessage('Please provide a value for "title"'),
+    check('lastName')
+      .exists({
+        checkNull: true,
+        checkFalsy: true,
+      })
+      .withMessage('Please provide a value for "description"'),
+  ],
+  validationResultFunc: (req, res) => {
+    // Attempt to get the validation result from the Request object.
+    const errors = validationResult(req);
+
+    // If there are validation errors...
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map((error) => error.msg);
+
+      // Return the validation errors to the client.
+      return res.status(400).json({
+        errors: errorMessages,
+      });
+    }
+    // Indicates the success of this synchronous custom validator
+    return true;
+  },
 };

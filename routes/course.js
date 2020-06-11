@@ -1,5 +1,11 @@
 const express = require('express');
 
+// Dependency imports
+const {
+  courseValidation,
+  validationResultFunc,
+} = require('../js/validation.js');
+
 // file imports
 const { asyncHandler, authenticateUser } = require('../js/functions.js');
 const { Course } = require('../models');
@@ -29,7 +35,7 @@ router.get(
 // (including the user that owns the course) for the provided course ID
 router.get(
   '/courses/:id',
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     // get the id
     const { id } = req.params;
     const course = await Course.findOne({
@@ -43,7 +49,6 @@ router.get(
       res.json({ course });
     } else {
       res.status(400).json({ message: 'Course not found' });
-      next();
     }
   }),
 );
@@ -52,20 +57,18 @@ router.get(
 router.post(
   '/courses',
   authenticateUser,
+  courseValidation,
   asyncHandler(async (req, res, next) => {
-    if (req.body.title && req.body.description) {
-      const currentUser = req.currentUser.id;
-      const course = await Course.create({
-        title: req.body.title,
-        description: req.body.description,
-        userId: currentUser,
-      });
-      res.status(201).location(`/courses/${course.id}`).json();
-    } else {
-      // change status to 400 if info missing
-      res.status(400).json({ message: 'title and description required' });
-      next();
-    }
+    // Attempt to get the validation result from the Request object.
+    validationResultFunc(req, res);
+
+    const currentUser = req.currentUser.id;
+    const course = await Course.create({
+      title: req.body.title,
+      description: req.body.description,
+      userId: currentUser,
+    });
+    res.status(201).location(`/courses/${course.id}`).json();
   }),
 );
 
@@ -73,8 +76,12 @@ router.post(
 router.put(
   '/courses/:id',
   authenticateUser,
-  asyncHandler(async (req, res, next) => {
+  courseValidation,
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
+
+    // Attempt to get the validation result from the Request object.
+    validationResultFunc(req, res);
 
     // get course
     const course = await Course.findByPk(id);
@@ -96,7 +103,6 @@ router.put(
       }
     } else {
       res.status(404).json({ message: 'Course Not Found' });
-      next();
     }
   }),
 );
@@ -105,7 +111,7 @@ router.put(
 router.delete(
   '/courses/:id',
   authenticateUser,
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     const course = await Course.findByPk(id);
@@ -121,7 +127,6 @@ router.delete(
       }
     } else {
       res.status(404).json({ message: 'Course Not Found' });
-      next();
     }
   }),
 );

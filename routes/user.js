@@ -3,12 +3,11 @@ const express = require('express');
 
 // Dependency imports
 const bcryptjs = require('bcryptjs');
-const { validationResult } = require('express-validator');
 
 // file imports
 const { User } = require('../models');
 const { authenticateUser } = require('../js/functions.js');
-const { validation } = require('../js/validation.js');
+const { userValidation, validationResultFunc } = require('../js/validation.js');
 
 // router server
 const router = express.Router();
@@ -22,6 +21,7 @@ router.get('/users', authenticateUser, (req, res) => {
   const user = req.currentUser;
 
   res.json({
+    id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
     emailAddress: user.emailAddress,
@@ -30,19 +30,9 @@ router.get('/users', authenticateUser, (req, res) => {
 
 // Send POST request to /users to create a new user
 // eslint-disable-next-line consistent-return
-router.post('/users', validation, (req, res) => {
+router.post('/users', userValidation, (req, res) => {
   // Attempt to get the validation result from the Request object.
-  const errors = validationResult(req);
-
-  // If there are validation errors...
-  if (!errors.isEmpty()) {
-    const errorMessages = errors.array().map((error) => error.msg);
-
-    // Return the validation errors to the client.
-    return res.status(400).json({
-      errors: errorMessages,
-    });
-  }
+  validationResultFunc(req, res);
 
   // Get the user from the request body.
   const user = req.body;
