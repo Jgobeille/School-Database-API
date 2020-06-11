@@ -54,7 +54,7 @@ router.post('/users', validation, (req, res) => {
   User.create(user);
 
   // Set the status to 201 Created and end the response.
-  res.status(201).end();
+  res.status(201).location('/').end();
 });
 
 module.exports = router;

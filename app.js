@@ -6,7 +6,7 @@
 const express = require('express');
 const morgan = require('morgan');
 
-const { sequelize } = require('./models');
+const { Sequelize } = require('./models');
 
 // routes
 const userRoutes = require('./routes/user');
@@ -32,23 +32,23 @@ app.use('/api', courseRoutes);
 
 // Test db connection
 
-// const sequelize = new Sequelize({
-//   dialect: 'sqlite',
-//   storage: 'fsjstd-restapi.db',
-// });
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: 'fsjstd-restapi.db',
+});
 
-// (async () => {
-//   try {
-//     await sequelize.authenticate();
-//     console.log('Connection to the database successful!');
-//   } catch (error) {
-//     console.error('Error connecting to the database: ', error);
-//   }
-// })();
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Connection to the database successful!');
+  } catch (error) {
+    console.error('Error connecting to the database: ', error);
+  }
+})();
 
-// sequelize.sync().then(() => {
-//   console.log('All Models were synced');
-// });
+sequelize.sync().then(() => {
+  console.log('All Models were synced');
+});
 
 // setup a friendly greeting for the root route
 app.get('/', (req, res) => {

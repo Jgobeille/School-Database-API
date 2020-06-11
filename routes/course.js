@@ -15,19 +15,13 @@ const router = express.Router();
 router.get(
   '/courses',
   asyncHandler(async (req, res) => {
-    const courses = await Course.findAll();
-
-    const filteredCourseList = courses.map((course) => {
-      return {
-        title: course.title,
-        description: course.description,
-        estimatedTime: course.estimatedTime,
-        materialsNeeded: course.materialsNeeded,
-        userId: course.userId,
-      };
+    const courses = await Course.findAll({
+      attributes: {
+        exclude: ['createdAt', 'updatedAt'],
+      },
     });
 
-    res.json({ filteredCourseList });
+    res.json({ courses });
   }),
 );
 
@@ -38,16 +32,15 @@ router.get(
   asyncHandler(async (req, res, next) => {
     // get the id
     const { id } = req.params;
-    const course = await Course.findByPk(id);
+    const course = await Course.findOne({
+      where: { id },
+      attributes: {
+        exclude: ['createdAt', 'updatedAt'],
+      },
+    });
     // send the data to the browser as JSON
     if (course) {
-      res.json({
-        title: course.title,
-        description: course.description,
-        estimatedTime: course.estimatedTime,
-        materialsNeeded: course.materialsNeeded,
-        userId: course.userId,
-      });
+      res.json({ course });
     } else {
       res.status(400).json({ message: 'Course not found' });
       next();
@@ -67,7 +60,7 @@ router.post(
         description: req.body.description,
         userId: currentUser,
       });
-      res.status(201).json(course);
+      res.status(201).location(`/courses/${course.id}`).json();
     } else {
       // change status to 400 if info missing
       res.status(400).json({ message: 'title and description required' });
