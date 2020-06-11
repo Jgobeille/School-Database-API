@@ -53,6 +53,7 @@ module.exports = {
 
     // If user authentication failed...
     if (message) {
+      // eslint-disable-next-line no-console
       console.warn(message);
       // Return a response with a 401 Unauthorized HTTP status code.
       res.status(401).json({

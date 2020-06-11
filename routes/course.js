@@ -1,9 +1,7 @@
 const express = require('express');
 
-// dependency imports
-
 // file imports
-const funcs = require('../js/functions.js');
+const { asyncHandler, authenticateUser } = require('../js/functions.js');
 const { Course } = require('../models');
 
 // router express server
@@ -16,7 +14,7 @@ const router = express.Router();
 // Send a GET request to /courses to READ a list of courses
 router.get(
   '/courses',
-  funcs.asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res) => {
     const courses = await Course.findAll();
 
     const filteredCourseList = courses.map((course) => {
@@ -29,7 +27,6 @@ router.get(
       };
     });
 
-    // Need to loop over courses, filter the properties I need, then send through JSON
     res.json({ filteredCourseList });
   }),
 );
@@ -38,10 +35,9 @@ router.get(
 // (including the user that owns the course) for the provided course ID
 router.get(
   '/courses/:id',
-  funcs.asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res, next) => {
     // get the id
     const { id } = req.params;
-    // get the quote from the database
     const course = await Course.findByPk(id);
     // send the data to the browser as JSON
     if (course) {
@@ -62,8 +58,8 @@ router.get(
 // Send a POST request to /quotes to CREATE a new course
 router.post(
   '/courses',
-  funcs.authenticateUser,
-  funcs.asyncHandler(async (req, res, next) => {
+  authenticateUser,
+  asyncHandler(async (req, res, next) => {
     if (req.body.title && req.body.description) {
       const currentUser = req.currentUser.id;
       const course = await Course.create({
@@ -83,8 +79,8 @@ router.post(
 // Send a PUT request to /courses/:id UPDATE(edit) a course
 router.put(
   '/courses/:id',
-  funcs.authenticateUser,
-  funcs.asyncHandler(async (req, res, next) => {
+  authenticateUser,
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
     // get course
@@ -93,7 +89,6 @@ router.put(
     if (course) {
       const currentUser = req.currentUser.id;
       if (course.userId === currentUser) {
-        // reassign author and quote to new data user input
         course.title = req.body.title;
         course.description = req.body.description;
 
@@ -116,8 +111,8 @@ router.put(
 // Send a DELETE request to /courses/:id DELETE a course
 router.delete(
   '/courses/:id',
-  funcs.authenticateUser,
-  funcs.asyncHandler(async (req, res, next) => {
+  authenticateUser,
+  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
     const course = await Course.findByPk(id);
