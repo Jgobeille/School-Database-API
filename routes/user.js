@@ -32,19 +32,21 @@ router.get('/users', authenticateUser, (req, res) => {
 // eslint-disable-next-line consistent-return
 router.post('/users', userValidation, (req, res) => {
   // Attempt to get the validation result from the Request object.
-  validationResultFunc(req, res);
+  const errorCheck = validationResultFunc(req, res);
 
-  // Get the user from the request body.
-  const user = req.body;
+  if (!errorCheck) {
+    // Get the user from the request body.
+    const user = req.body;
 
-  // Hash the new user's password
-  user.password = bcryptjs.hashSync(user.password);
+    // Hash the new user's password
+    user.password = bcryptjs.hashSync(user.password);
 
-  // Add the user to the `users` array.
-  User.create(user);
+    // Add the user to the `users` array.
+    User.create(user);
 
-  // Set the status to 201 Created and end the response.
-  res.status(201).location('/').end();
+    // Set the status to 201 Created and end the response.
+    res.status(201).location('/').end();
+  }
 });
 
 module.exports = router;

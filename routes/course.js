@@ -60,15 +60,19 @@ router.post(
   courseValidation,
   asyncHandler(async (req, res, next) => {
     // Attempt to get the validation result from the Request object.
-    validationResultFunc(req, res);
+    const errorCheck = validationResultFunc(req, res);
 
-    const currentUser = req.currentUser.id;
-    const course = await Course.create({
-      title: req.body.title,
-      description: req.body.description,
-      userId: currentUser,
-    });
-    res.status(201).location(`/courses/${course.id}`).json();
+    if (!errorCheck) {
+      console.log('why u running?');
+
+      const currentUser = req.currentUser.id;
+      const course = await Course.create({
+        title: req.body.title,
+        description: req.body.description,
+        userId: currentUser,
+      });
+      res.status(201).location(`/courses/${course.id}`).json();
+    }
   }),
 );
 
@@ -81,12 +85,12 @@ router.put(
     const { id } = req.params;
 
     // Attempt to get the validation result from the Request object.
-    validationResultFunc(req, res);
+    const errorCheck = validationResultFunc(req, res);
 
     // get course
     const course = await Course.findByPk(id);
 
-    if (course) {
+    if (course && !errorCheck) {
       const currentUser = req.currentUser.id;
       if (course.userId === currentUser) {
         course.title = req.body.title;

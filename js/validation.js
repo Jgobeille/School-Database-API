@@ -56,13 +56,14 @@ module.exports = {
         checkFalsy: true,
       })
       .withMessage('Please provide a value for "title"'),
-    check('lastName')
+    check('description')
       .exists({
         checkNull: true,
         checkFalsy: true,
       })
       .withMessage('Please provide a value for "description"'),
   ],
+  // eslint-disable-next-line consistent-return
   validationResultFunc: (req, res) => {
     // Attempt to get the validation result from the Request object.
     const errors = validationResult(req);
@@ -70,13 +71,14 @@ module.exports = {
     // If there are validation errors...
     if (!errors.isEmpty()) {
       const errorMessages = errors.array().map((error) => error.msg);
-
+      console.log('error');
       // Return the validation errors to the client.
-      return res.status(400).json({
+      res.status(400).json({
         errors: errorMessages,
       });
+      return true;
     }
-    // Indicates the success of this synchronous custom validator
-    return true;
+
+    return false;
   },
 };
