@@ -71,7 +71,6 @@ module.exports = {
     // If there are validation errors...
     if (!errors.isEmpty()) {
       const errorMessages = errors.array().map((error) => error.msg);
-      console.log('error');
       // Return the validation errors to the client.
       res.status(400).json({
         errors: errorMessages,

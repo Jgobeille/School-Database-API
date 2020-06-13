@@ -1,14 +1,12 @@
 const express = require('express');
 
-// Dependency imports
+// file imports
+const { asyncHandler, authenticateUser } = require('../js/functions.js');
+const { Course, User } = require('../models');
 const {
   courseValidation,
   validationResultFunc,
 } = require('../js/validation.js');
-
-// file imports
-const { asyncHandler, authenticateUser } = require('../js/functions.js');
-const { Course } = require('../models');
 
 // router express server
 const router = express.Router();
@@ -25,6 +23,15 @@ router.get(
       attributes: {
         exclude: ['createdAt', 'updatedAt'],
       },
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: {
+            exclude: ['password', 'createdAt', 'updatedAt'],
+          },
+        },
+      ],
     });
 
     res.json({ courses });
@@ -43,6 +50,15 @@ router.get(
       attributes: {
         exclude: ['createdAt', 'updatedAt'],
       },
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: {
+            exclude: ['password', 'createdAt', 'updatedAt'],
+          },
+        },
+      ],
     });
     // send the data to the browser as JSON
     if (course) {
@@ -63,15 +79,16 @@ router.post(
     const errorCheck = validationResultFunc(req, res);
 
     if (!errorCheck) {
-      console.log('why u running?');
-
       const currentUser = req.currentUser.id;
-      const course = await Course.create({
-        title: req.body.title,
-        description: req.body.description,
+      const course = req.body;
+      const newCourse = await Course.create({
+        title: course.title,
+        description: course.description,
+        estimatedTime: course.estimatedTime,
+        materialsNeeded: course.materialsNeeded,
         userId: currentUser,
       });
-      res.status(201).location(`/courses/${course.id}`).json();
+      res.status(201).location(`/courses/${newCourse.id}`).json();
     }
   }),
 );
@@ -89,24 +106,24 @@ router.put(
 
     // get course
     const course = await Course.findByPk(id);
-
-    if (course && !errorCheck) {
-      const currentUser = req.currentUser.id;
-      if (course.userId === currentUser) {
-        course.title = req.body.title;
-        course.description = req.body.description;
-
-        await course.update(req.body);
-        // everything A O.K. status
-        // end method tells express server that route is completed
-        res.status(204).end();
+    if (!errorCheck) {
+      if (course) {
+        const currentUser = req.currentUser.id;
+        if (course.userId === currentUser) {
+          course.title = req.body.title;
+          course.description = req.body.description;
+          await course.update(req.body);
+          // everything A O.K. status
+          // end method tells express server that route is completed
+          res.status(204).end();
+        } else {
+          res.status(403).json({
+            message: 'This user is not authorized to edit this course',
+          });
+        }
       } else {
-        res
-          .status(403)
-          .json({ message: 'This user is not authorized to edit this course' });
+        res.status(404).json({ message: 'Course Not Found' });
       }
-    } else {
-      res.status(404).json({ message: 'Course Not Found' });
     }
   }),
 );
