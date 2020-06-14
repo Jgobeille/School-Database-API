@@ -74,7 +74,7 @@ router.post(
   '/courses',
   authenticateUser,
   courseValidation,
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
     // Attempt to get the validation result from the Request object.
     const errorCheck = validationResultFunc(req, res);
 
