@@ -284,7 +284,7 @@ router.get(
 
 ```
 
-# Update Course Route
+### Update Course Route
 
 - This route updates information about a course
 - This route first checks if there are no errors in course input. Next, checks if the course exists or not. Then checks if the user making the change is the same user who is associated with the course
