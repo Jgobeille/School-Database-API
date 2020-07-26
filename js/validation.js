@@ -20,7 +20,10 @@ module.exports = {
       })
       .withMessage('Please provide a value for "last name"'),
     check('emailAddress')
-      .exists({ checkNull: true, checkFalsy: true })
+      .exists({
+        checkNull: true,
+        checkFalsy: true,
+      })
       .withMessage('Please provide a value for "Email"')
       .isEmail()
       .withMessage('Please provide a valid email address for "Email"')
@@ -44,9 +47,15 @@ module.exports = {
         return true;
       }),
     check('password')
-      .exists({ checkNull: true, checkFalsy: true })
+      .exists({
+        checkNull: true,
+        checkFalsy: true,
+      })
       .withMessage('Please provide a value for "Password"')
-      .isLength({ min: 8, max: 20 })
+      .isLength({
+        min: 8,
+        max: 20,
+      })
       .withMessage('Please provide password with 8 to 20 characters'),
   ],
   courseValidation: [
