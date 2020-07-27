@@ -21,7 +21,7 @@ const enableGlobalErrorLogging =
 const app = express();
 
 
-
+app.use(cors());
 app.options('*', cors()) // include before other routes
 
 
