@@ -21,7 +21,9 @@ const enableGlobalErrorLogging =
 const app = express();
 
 
-app.use(cors());
+app.use(cors({
+exposedHeaders: ['*']
+}));
 
 
 // setup morgan which gives us http request logging
